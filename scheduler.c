@@ -1,54 +1,48 @@
-#include<stdio.h>
+ #include<stdio.h>
+ #include<unistd.h>
+ #include<stdlib.h>
 
-#include<unistd.h>
+ typedef int bool;
 
-#include<stdlib.h>
+ typedef struct node{
+  int id;
+  int time_left;
+  struct node *next;
+ }node;
 
-typedef int bool;
+node* newNode(int pid,int exec_time) {
 
-typedef struct Node{
+  node *newnode=(node*)malloc(sizeof(node));
 
-int id;
+  newnode->id=pid;
 
-int time_left;
+  newnode->time_left=exec_time;
 
-struct Node *next;
+  newnode->next=NULL;
 
-}Node;
+  return newnode;
 
-Node* newNode(int pid,int exec_time){
+ }
 
-Node *newnode=(Node*)malloc(sizeof(Node));
+bool isEmpty(node *end){
 
-newnode->id=pid;
-
-newnode->time_left=exec_time;
-
-newnode->next=NULL;
-
-return newnode;
-
-}
-
-bool isEmpty(Node *end){
-
-return (end==NULL);
+  return (end==NULL);
 
 }
 
-void printList(Node *end){
+void printList(node *end){
 
-if(isEmpty(end))return;
+  if(isEmpty(end))return;
 
-Node *ptr=end->next;
+    node *ptr=end->next;
 
-while(ptr!=end){
+    while(ptr!=end){
 
-printf("Process %d\t %d seconds left\n",ptr->id,ptr->time_left);
+      printf("Process %d\t %d seconds left\n",ptr->id,ptr->time_left);
 
-ptr=ptr->next;
+      ptr=ptr->next;
 
-}
+    }
 
 printf("Process %d\t %d seconds left\n",ptr->id,ptr->time_left);
 
@@ -56,9 +50,9 @@ printf("\n");
 
 }
 
-void add(int pid,int exec_time,Node **end){
+void add(int pid,int exec_time,node **end){
 
-Node *newnode=newNode(pid,exec_time);
+node *newnode=newNode(pid,exec_time);
 
 if((*end)==NULL){
 
@@ -78,103 +72,106 @@ newnode->next=(*end)->next;
 
 }
 
-Node* createList(){
+node* createList(){
 
-Node *end=NULL;
+node *end=NULL;
 
-while(1){
+  while(1){
 
-int id,t;
+    int id,t;
 
-if(scanf("%d%d",&id,&t)==EOF)break;
+    if(scanf("%d%d",&id,&t)==EOF)break;
 
-add(id,t,&end);
+      add(id,t,&end);
 
-}
+   }
 
 return end;
 
 }
 
-Node* removeCurrent(Node *curr,Node **end){
+node* removeCurrent(node *curr,node **end){
 
-if(curr==NULL)return NULL;
+  if(curr==NULL)return NULL;
 
-if(curr->time_left!=0)return curr->next;
+  if(curr->time_left!=0)
+    return curr->next;
 
-printf("Process %d has executed.\n",curr->id);
+  printf("Process %d has executed.\n",curr->id);
 
-if(curr->next==curr){
+  if(curr->next==curr){
 
-//only process
+    //only process
 
-free(curr);
+    free(curr);
 
-return NULL;
+    return NULL;
 
-}
+  }
 
-Node *temp=curr;
+node *temp=curr;
 
-Node *parent_temp=temp->next;
+node *parent_temp=temp->next;
 
 while(parent_temp->next!=temp)parent_temp=parent_temp->next;
 
-parent_temp->next=temp->next;
+  parent_temp->next=temp->next;
 
-if(curr==(*end)){
+  if(curr==(*end)) {
 
-(*end)=curr->next;
+    (*end)=curr->next;
 
-}
+  }
 
-curr=curr->next;
+  curr=curr->next;
 
-free(temp);
+  free(temp);
 
-return curr;
+  return curr;
 
-}
+ }
 
-Node* scanList(Node *end){
+node* scanList(node *end){
 
-if(end==NULL)return NULL;
+  if(end==NULL)
+    return NULL;
 
-printList(end);
+  printList(end);
 
-Node *curr=end->next;
+  node *curr=end->next;
 
-while(curr!=NULL){
+  while(curr!=NULL){
 
-sleep(1);//sleep for one second
+    sleep(1);//sleep for one second
 
-(curr->time_left)=(curr->time_left)-1;
+    (curr->time_left) = (curr->time_left)-1;
 
-curr=removeCurrent(curr,&end);
+    curr = removeCurrent(curr,&end);
 
-if(curr==NULL)end=NULL;
+    if(curr==NULL)
+       end=NULL;
 
-printList(end);
+    printList(end);
 
-}
+  }
 
 return NULL;
 
 }
 
-int main(){
+int main() {
 
-Node *end=createList();
+  node *end=createList();
 
-printf("\n");
+  printf("\n");
 
-printList(end);
+  printList(end);
 
-printf("\n");
+  printf("\n");
 
-end=scanList(end);
+  end=scanList(end);
 
-return 0;
+  return 0;
 
 }
 
