@@ -35,7 +35,7 @@ void disPerm(char file[]) {
 
 int main(int argc, char *argv[]) {
 
-	/*
+	
 	//pointer for dir entry
 	struct dirent *de;
 	DIR *dr = opendir(argv[1]);
@@ -54,15 +54,15 @@ int main(int argc, char *argv[]) {
 	closedir(dr); //close directory		
 
 
-	return 0;*/
+	return 0;
 
-	if(argc == 1) 
+	/*if(argc == 1) 
 		disPerm(".");
 	else {
 		while(--argc) {
 			printf("%s:\n", *++argv);
 			disPerm(*argv);
 		}
-	}
+	}*/
 
 }
