@@ -1,242 +1,361 @@
+#include<stdio.h> 
+#include<string.h> 
+#include<stdlib.h> 
 #include <sys/types.h> 
 #include <dirent.h> 
 #include <sys/stat.h> 
 #include <unistd.h> 
-#include <stdio.h> 
-#include <string.h> 
-
-void do_ls(char[]);
-void dostat(char *);
-void show_file_info (char *, struct stat *);
-void mode_to_letters(int, char []);
-char *uid_to_name(uid_t);
-char *gid_to_name(gid_t);
-
-main(int ac, char *av[])
-{
-	if(ac==1)
-		do_ls(".");
-	else
-		while(--ac){
-			printf("%s:\n", *++av);
-			do_ls(*av);
-		}
-}
-void do_ls(char dirname[]){
-	DIR				*dir_ptr;
-	struct dirent	*direntp;
-	
-	if ((dir_ptr = opendir(dirname))==NULL)
-		fprintf(stderr,"ls-l: cannot open %s:\n", dirname);
-	else {
-		while ((direntp = readdir(dir_ptr))!=NULL)
-			dostat(direntp->d_name);
-		closedir(dir_ptr);
-	}
-}
-
-void dostat(char *filename)
-{
-	struct stat info;
-	if (stat(filename, &info)==-1)
-		perror(filename);
-	else
-		show_file_info(filename, &info);
-}
-
-void show_file_info(char *filename, struct stat *info_p){
-	char *uid_to_name(), *ctime(), *gid_to_name(), *filemode();
-	void mode_to_letters();
-	char modestr[11];
-	char str1, str2;
-    
-    	scanf("%2s",str1);
-    	str2 = "-l";
-
-    	if (str1 == str2) {
-		mode_to_letters(info_p->st_mode, modestr);
-		printf( " %s "	,modestr);
-		printf( " %4d "	,(int)info_p->st_nlink);
-		printf( " %-8s "	,uid_to_name(info_p->st_uid));
-		printf( " %-8s "	,gid_to_name(info_p->st_gid));
-		printf( " %8ld "	,(long)info_p->st_size);
-		printf( " %.12s "	,4+ctime(&info_p->st_mtime));
-		printf( " %s\n "	,filename);
-	}
-}
-
-void mode_to_letters(int mode, char str[]){
-strcpy(str, "----------");
-	if(S_ISDIR(mode)) str[0]='d';
-	if(S_ISCHR(mode)) str[0]='c';
-	if(S_ISBLK(mode)) str[0]='b';
-	
-	if (mode & S_IRUSR) str[1]='r';
-	if (mode & S_IWUSR) str[2]='w';
-	if (mode & S_IXUSR) str[3]='x';
-	
-	if (mode & S_IRGRP) str[4]='r';
-	if (mode & S_IWGRP) str[5]='w';
-	if (mode & S_IXGRP) str[6]='x';
-	
-	if (mode & S_IROTH) str[7]='r';
-	if (mode & S_IWOTH) str[8]='w';
-	if (mode & S_IXOTH) str[9]='x';
-}
-
-#include	<pwd.h>
-
-char *uid_to_name(uid_t uid){
-	struct passwd *getpwuid(), *pw_ptr;
-	static char numstr[10];
-	
-	if((pw_ptr=getpwuid(uid))==NULL){
-		sprintf(numstr,"%d",uid);
-		return numstr;
-	}
-	else
-			return pw_ptr->pw_name;
-}
-#include <grp.h>
-char *gid_to_name(gid_t gid){
-	struct group *getgrgid(), *grp_ptr;
-	static char numstr[10];
-	
-	if((grp_ptr = getgrgid(gid)) == NULL){
-		sprintf(numstr,"%d",gid);
-		return numstr;
-	} else
-		return grp_ptr->gr_name;
-}
-
-/******************************************************
-long *ptr = NULL;
-    unsigned int count = 0;
-    int num_files = 0; //holds number of files inside dir
-
-    DIR *dp = NULL;
-    char *curr_dir = NULL;
-    struct dirent *dptr = NULL;
-
-    dp = opendir((const char*)curr_dir); //open dir
-    while(NULL != (dptr = readdir(dp))) { //start reading dir contents
-	//don't count files beginning with "."
-	if(dptr->d_name[0] != '.')
-		num_files++;
-    }
-
-    closedir(dp);
-
-    dp = NULL;
-    dptr = NULL;
-   
-    //check if there is at least one file or folder inside curr working dir
-    if (!num_files) {
-	return 0;
-    } else {
-	//allocate mem to hold addr of names of contents in curr working dir
-	ptr = malloc(num_files*8);
-	if (NULL == ptr) {
-		printf("\n Memory allocation failed.\n");
-		return -1;
-	} else { 
-		//initialize memory by zeros
-		memset(ptr, 0, num_files*8);
-	}
-    }
-
-    //open dir 
-    dp = opendir((const char*)curr_dir);
-    if(NULL == dp) {
-    	printf("\nError: Could not open working dir\n");
-	free(ptr);
-	return -1;
-    }
-
-    unsigned int j = 0;
-    for(count = 0; NULL != (dptr = readdir(dp)); count ++) {
-	if(dptr->d_name[0] != '.') {
-		ptr[j] = (long)dptr->d_name;
-		j++;
-	}
-    }
-
-    //sorts names alphabetically using bubble sort
-    for(count = 0; count < num_files - 1; count ++) {
-	for(j = count + 1; j < (num_files); j++) {
-		char *c = (char*)ptr[count];
-		char *d = (char*)ptr[j];
-
-		//checks if two numbers are from same set
-		if( ((*c >= 'a') && (*d >= 'a')) || ((*c <= 'Z') && (*d <= 'Z')) ) {
-			int i = 0;
-			//if initial characters are same, continue comparing until difference
-			if (*c == *d) {
-				while(*(c+i) == *(d+i)) {
-					i++;
-				}
-			}
-			//checks if earlier stored value is alphabetically higher than next val
-			if(*(c+i) > *(d+i)) {
-				//if yes, then swap values
-				long temp = 0;
-				temp = ptr[count];
-				ptr[count] = ptr[j];
-				ptr[j] = temp;
-			}
-		} else { //if two beginning characters differ, then make same and compare
-			int off1 = 0, off2 = 0;
-			if(*c <= 'Z') {
-				off1 = 32;
-			}
-			if (*d <= 'Z') {
-				off2 = 32;
-			}
-
-			int i = 0;
-
-			//after character set made same, check if beginning char are same
-			if(*c + off1 == *d + off2) { //search until find some difference
-				while(*(c + off1 + i) == *(d + off2 + i)) {
-					i++;
-				}
-			}
-		
-			//after difference is found, swap if necessary
-			if ((*c + off1 + i) > (*d + off2 + i)) {
-				long temp = 0;
-				temp = ptr[count];
-				ptr[count] = ptr[j];
-				ptr[j] = temp;
-			}
-		}
-	     }
-	}
-
-	//start displaying on console
-	for(count = 0; count < num_files; count++) {
-		if(!access((const char*)ptr[count], X_OK)) {
-			//int fd = -1;
-			struct stat st;
-		
-			fd = open((char*)ptr[count], O_RDONLY, 0);
-			if(-1 == fd) {
-				printf("\n Opening file/Dir failed\n");
-				free(ptr);
-				return -1;
-			}
-
-			close(fd);
-
-		//} else {
-			printf("%s	",(char*)ptr[count]);
-		}
-	}
-	printf("\n");
-
-	free(ptr); //free allocated memory
-	return 0; 
-
-************************************************************/
-				
+#include <fcntl.h> 
+#include <sys/ioctl.h> 
+#include <pwd.h> 
+#include <grp.h> 
+#include <time.h> 
+ 
+ 
+ 
+#define RESET_COLOR "\e[m" 
+#define MAKE_GREEN "\e[32m" 
+#define MAKE_BLUE "\e[36m" 
+ 
+ 
+int main(void) 
+{ 
+   char *curr_dir = NULL; 
+   DIR *dp = NULL; 
+   struct dirent *dptr = NULL; 
+   unsigned int count = 0; 
+   long *ptr = NULL; 
+   struct winsize w; 
+ 
+   //to get the number of rows and column visible on terminal 
+   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w); 
+ 
+   // Fetch the environment variable PWD so as to get the  
+   // Current working directory 
+   curr_dir = getenv("PWD"); 
+   if(NULL == curr_dir) 
+   { 
+       printf("\n ERROR : Could not get the working directory\n"); 
+       return -1; 
+   } 
+ 
+   // Variable to hold number of files inside the directory 
+   int num_files = 0; 
+   // opne the directory 
+   dp = opendir((const char*)curr_dir);   
+   // Start reading the directory contents 
+   while(NULL != (dptr = readdir(dp)))  
+   { 
+       // Do not count the files beginning with '.' 
+       if(dptr->d_name[0] != '.') 
+       num_files++; 
+   } 
+   // Our aim was to count the number of files/folders  
+   // inside the current working directory. Since its  
+   // done so close the directory. 
+   closedir(dp); 
+ 
+   // Restore the values back as we will be using them 
+   // later again 
+   dp = NULL; 
+   dptr = NULL; 
+ 
+   // Check that we should have at least one file/folder 
+   // inside the current working directory 
+   if(!num_files) 
+   { 
+       return 0; 
+   } 
+   else 
+   { 
+       // Allocate memory to hold the addresses of the  
+       // names of contents in current working directory 
+       ptr = malloc(num_files*8); 
+       if(NULL == ptr) 
+       { 
+           printf("\n Memory allocation failed\n"); 
+           return -1; 
+       } 
+       else 
+       { 
+           // Initialize the memory by zeros 
+           memset(ptr,0,num_files*8); 
+       } 
+   }  
+ 
+   // Open the directory again 
+   dp = opendir((const char*)curr_dir);    
+   if(NULL == dp) 
+   { 
+       printf("\n ERROR : Could not open the working directory\n"); 
+       free(ptr); 
+       return -1; 
+   } 
+  
+   // Start iterating the directory and read all its contents 
+   // inside an array allocated above. 
+   unsigned int j = 0; 
+   for(count = 0; NULL != (dptr = readdir(dp)); count++) 
+   { 
+       if(dptr->d_name[0] != '.') 
+       { 
+          ptr[j] = (long)dptr->d_name; 
+          j++;  
+       } 
+   } 
+ 
+   // Start sorting the names alphabetically 
+   // Using bubble sorting here 
+   for(count = 0; count< num_files-1;count++) 
+   { 
+       for(j=count+1; j< (num_files);j++) 
+       { 
+           char *c = (char*)ptr[count]; 
+           char *d = (char*)ptr[j]; 
+            
+           // Check that the two characters should be from same set 
+           if( ((*c >= 'a') && (*d >= 'a')) || ((*c <='Z') && (*d <='Z')) ) 
+           { 
+               int i = 0; 
+               // If initial characters are same, continue comparing 
+               // the characters until a difference is found 
+               if(*c == *d) 
+               { 
+                   while(*(c+i)==*(d+i)) 
+                   { 
+                       i++; 
+                   } 
+               } 
+               // Check if the earlier stored value is alphabetically 
+               // higher than the next value 
+               if(*(c+i) > *(d+i)) 
+               { 
+                   // If yes, then swap the values 
+                   long temp = 0; 
+                   temp = ptr[count]; 
+                   ptr[count] = ptr[j]; 
+                   ptr[j] = temp; 
+               } 
+ 
+           } 
+           else 
+           { 
+               // if the two beginning characters are not from 
+               // the same ascii set then make them same and then 
+               // compare. 
+               int off_1=0, off_2=0; 
+               if(*c <= 'Z') 
+               { 
+                   off_1 = 32; 
+               } 
+               if(*d <= 'Z') 
+               { 
+                   off_2 = 32; 
+               } 
+ 
+               int i = 0; 
+               // After the character set are made same, check if the 
+               // beginning characters are same. If yes, then continue  
+               // searching until we find some difference. 
+               if(*c+ off_1 == *d + off_2) 
+               { 
+                   while(*(c+off_1+i)==*(d+off_2+i)) 
+                   { 
+                       i++; 
+                   } 
+               } 
+               // After difference is found, check if a swap is required. 
+               if((*c + off_1+i) > (*d + off_2+i)) 
+               { 
+                   // If yes, go ahead and do the swap 
+                   long temp = 0; 
+                   temp = ptr[count]; 
+                   ptr[count] = ptr[j]; 
+                   ptr[j] = temp; 
+               } 
+           } 
+       } 
+    } 
+ 
+   // Now the names are sorted alphabetically 
+   // Start displaying on console. 
+   for(count = 0; count< num_files; count++) 
+   { 
+       int fd = -1; 
+       struct stat st; 
+ 
+       fd = open((char*)ptr[count], O_RDONLY, 0); 
+       if(-1 == fd) 
+       { 
+           printf("\n Opening file/Directory failed\n"); 
+           free(ptr); 
+           return -1; 
+       } 
+ 
+      // Call fstat to get the stat info about the file 
+      if(fstat(fd, &st)) 
+      { 
+          // If fstat() fails 
+          printf("\n Fstat() failed\n"); 
+          close(fd); 
+          free(ptr); 
+          return -1; 
+      } 
+ 
+      // Check if a directory 
+      if(S_ISDIR(st.st_mode)) 
+      { 
+      printf("d"); 
+      } 
+      else 
+      {     
+          printf("-"); 
+      } 
+ 
+      // Check the owner permission 
+      mode_t permission = st.st_mode & S_IRWXU; 
+ 
+      if(permission & S_IRUSR) 
+      { 
+          printf("r"); 
+      } 
+      else 
+      { 
+          printf("-"); 
+      } 
+ 
+      if(permission & S_IWUSR) 
+      { 
+          printf("w"); 
+      } 
+      else 
+      { 
+          printf("-"); 
+      } 
+ 
+      if(permission & S_IXUSR) 
+      { 
+          printf("x"); 
+      } 
+      else 
+      { 
+          printf("-"); 
+      } 
+ 
+ 
+      // CHeck the group permission 
+      permission = st.st_mode & S_IRWXG; 
+ 
+      if(permission & S_IRGRP) 
+      { 
+          printf("r"); 
+      } 
+      else 
+      { 
+          printf("-"); 
+      } 
+ 
+      if(permission & S_IWGRP) 
+      { 
+          printf("w"); 
+      } 
+      else 
+      { 
+          printf("-"); 
+      } 
+ 
+      if(permission & S_IXGRP) 
+      { 
+          printf("x"); 
+      } 
+      else 
+      { 
+          printf("-"); 
+      } 
+ 
+ 
+      // CHeck other's permission 
+      permission = st.st_mode & S_IRWXO; 
+ 
+      if(permission & S_IROTH) 
+      { 
+          printf("r"); 
+      } 
+      else 
+      { 
+          printf("-"); 
+      } 
+ 
+      if(permission & S_IWOTH) 
+      { 
+          printf("w"); 
+      } 
+      else 
+      { 
+          printf("-"); 
+      } 
+ 
+      if(permission & S_IXOTH) 
+      { 
+          printf("x"); 
+      } 
+      else 
+      { 
+          printf("-"); 
+      } 
+ 
+      // Print the number of hard links 
+      printf(" %d ", (int)st.st_nlink); 
+ 
+      // Get the user name 
+      struct passwd *pt = getpwuid(st.st_uid); 
+      printf("%s ",pt->pw_name); 
+ 
+      // Get the group name 
+      struct group *p = getgrgid(st.st_gid); 
+      printf("%s ",p->gr_name); 
+ 
+      // Get the file size 
+      printf("%lld ",(long long) st.st_size); 
+ 
+      // Get the date and time 
+      // Note that some logic is applied here 
+      // so as to remove the trailing newline. 
+      char date_time[100]; 
+      memset(date_time,0,sizeof(date_time)); 
+      strncpy(date_time, ctime(&st.st_ctime), sizeof(date_time)); 
+      int c = 0; 
+      while(date_time[c] != '\0') 
+      { 
+          if(date_time[c] == '\n') 
+              date_time[c] = '\0'; 
+          c++; 
+      } 
+      printf("%s ", date_time); 
+ 
+       // Check if the file/folder is executable. 
+      if(!access((const char*)ptr[count],X_OK)) 
+      { 
+          if(S_ISDIR(st.st_mode)) 
+          { 
+              // If folder, print in blue 
+              printf(MAKE_BLUE"%s\n"RESET_COLOR,(char*)ptr[count]); 
+          } 
+          else 
+          {        
+              // If executable file, print in green                            
+              printf(MAKE_GREEN"%s\n"RESET_COLOR,(char*)ptr[count]); 
+          } 
+      } 
+      else 
+      { 
+          // If normal file, print by the default way(black color) 
+          printf("%s\n",(char*)ptr[count]); 
+      } 
+      close(fd); 
+   } 
+ 
+   //Free the allocated memory 
+   free(ptr); 
+   return 0; 
 }
