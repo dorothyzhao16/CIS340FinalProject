@@ -1,6 +1,6 @@
 #include<stdio.h> //tells the compiler to insert the contents of stdio at that particular place, like standard input and output such as printf scanf.
 #include<unistd.h> //standard header file that provides access to POSIX (portable operating system interface) API
-#include<stdlib.h> // contains declaration of malloc() and free(). header file for standard library.
+#include<stdlib.h> //contains declaration of malloc() and free(). header file for standard library.
 
  typedef int bool;
 
@@ -22,7 +22,7 @@
 
     while(ptr != end) { /* continue whilst there are nodes left */
       printf("Process %d: %d seconds left\n",ptr->processID,ptr->timeRemaining);
-      ptr = ptr->next;   /* goto the next node in the list       */
+      ptr = ptr->next;   /* go to the next node in the list       */
 
     }
 
