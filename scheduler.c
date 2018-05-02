@@ -1,10 +1,10 @@
-#include<stdio.h>
-#include<unistd.h>
-#include<stdlib.h>
+#include<stdio.h> //tells the compiler to insert the contents of stdio at that particular place, like standard input and output such as printf scanf.
+#include<unistd.h> //standard header file that provides access to POSIX (portable operating system interface) API
+#include<stdlib.h> // contains declaration of malloc() and free(). header file for standard library.
 
  typedef int bool;
 
- typedef struct node{ 
+ typedef struct node{ // typedef name doesn't become visible until the end of the declaration. If the structure contains a pointer to itself, you have use the struct version to refer to it.
 	int processID;
   	int timeRemaining;
   	struct node *next;
@@ -18,11 +18,11 @@
 	if(isEmpty(end))
 		return;
 	
-	node *ptr = end->next;
+	node *ptr = end->next;  
 
-    while(ptr != end) {
+    while(ptr != end) { /* continue whilst there are nodes left */
       printf("Process %d: %d seconds left\n",ptr->processID,ptr->timeRemaining);
-      ptr = ptr->next;
+      ptr = ptr->next;   /* goto the next node in the list       */
 
     }
 
@@ -44,7 +44,7 @@
  void add(int processID,int exeTime,node **end) {
 
 	node *newnode = newNode(processID,exeTime); //uses newNode to add new node
-	if((*end) == NULL){
+	if((*end) == NULL){ 
 		newnode->next = newnode;
 		(*end) = newnode;
 	} else {
